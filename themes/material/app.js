@@ -2,6 +2,30 @@ document.write('<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mdui@0.4.3/d
 document.write('<script src="//cdn.jsdelivr.net/npm/markdown-it@10.0.0/dist/markdown-it.min.js"></script>');
 document.write('<style>.mdui-appbar .mdui-toolbar{height:56px;font-size:1pc}.mdui-toolbar>*{padding:0 6px;margin:0 2px}.mdui-toolbar>i{opacity:.5}.mdui-toolbar>.mdui-typo-headline{padding:0 1pc 0 0}.mdui-toolbar>i{padding:0}.mdui-toolbar>a:hover,a.active,a.mdui-typo-headline{opacity:1}.mdui-container{max-width:980px}.mdui-list-item{transition:none}.mdui-list>.th{background-color:initial}.mdui-list-item>a{width:100%;line-height:3pc}.mdui-list-item{margin:2px 0;padding:0}.mdui-toolbar>a:last-child{opacity:1}@media screen and (max-width:980px){.mdui-list-item .mdui-text-right{display:none}.mdui-container{width:100%!important;margin:0}.mdui-toolbar>.mdui-typo-headline,.mdui-toolbar>a:last-child,.mdui-toolbar>i:first-child{display:block}}</style>');
 
+function encodeUrl(clearString) {
+  var output = '';
+  var x = 0;
+  clearString = clearString.toString();
+  var regex = /(^[a-zA-Z0-9_.]*)/;
+  while (x < clearString.length) {
+    var match = regex.exec(clearString.substr(x));
+    if (match != null && match.length > 1 && match[1] != '') {
+      output += match[1];
+      x += match[1].length;
+    } else {
+      if (clearString[x] == ' ')
+        output += '+';
+      else {
+        var charCode = clearString.charCodeAt(x);
+        var hexVal = charCode.toString(16);
+        output += '%' + (hexVal.length < 2 ? '0' : '') + hexVal.toUpperCase();
+      }
+      x++;
+    }
+  }
+  return output;
+}
+
 // 初始化页面，并载入必要资源
 function init() {
   document.siteName = $('title').html();
@@ -181,8 +205,8 @@ function get_file(path, file, callback) {
 function file(path) {
   let name = path.split('/').pop();
   let ext = name.split('.').pop().toLowerCase().replace(`?a=view`, "");
-  let url = windows.locaion.origin + path.split('/').map(urlencode).join('/')
-  
+  let url = windows.locaion.origin + path.split('/').map(encodeUrl).join('/')
+
   if ("|html|php|css|go|java|js|json|txt|sh|md|".indexOf(`|${ext}|`) >= 0) {
     return file_code(path, url);
   }
