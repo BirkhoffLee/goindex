@@ -13,13 +13,9 @@ function encodeUrl(clearString) {
       output += match[1];
       x += match[1].length;
     } else {
-      if (clearString[x] == ' ')
-        output += '+';
-      else {
-        var charCode = clearString.charCodeAt(x);
-        var hexVal = charCode.toString(16);
-        output += '%' + (hexVal.length < 2 ? '0' : '') + hexVal.toUpperCase();
-      }
+      var charCode = clearString.charCodeAt(x);
+      var hexVal = charCode.toString(16);
+      output += '%' + (hexVal.length < 2 ? '0' : '') + hexVal.toUpperCase();
       x++;
     }
   }
