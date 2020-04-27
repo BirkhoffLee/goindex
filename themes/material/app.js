@@ -179,31 +179,33 @@ function get_file(path, file, callback) {
 
 // 文件展示 ?a=view
 function file(path) {
-  var name = path.split('/').pop();
-  var ext = name.split('.').pop().toLowerCase().replace(`?a=view`, "");
+  let name = path.split('/').pop();
+  let ext = name.split('.').pop().toLowerCase().replace(`?a=view`, "");
+  let url = windows.locaion.origin + path.split('/').map(urlencode).join('/')
+  
   if ("|html|php|css|go|java|js|json|txt|sh|md|".indexOf(`|${ext}|`) >= 0) {
-    return file_code(path);
+    return file_code(path, url);
   }
 
   if ("|mp4|webm|avi|".indexOf(`|${ext}|`) >= 0) {
-    return file_video(path);
+    return file_video(path, url);
   }
 
   if ("|mpg|mpeg|mkv|rm|rmvb|mov|wmv|asf|ts|flv|".indexOf(`|${ext}|`) >= 0) {
-    return file_video(path);
+    return file_video(path, url);
   }
 
   if ("|mp3|wav|ogg|m4a|".indexOf(`|${ext}|`) >= 0) {
-    return file_audio(path);
+    return file_audio(path, url);
   }
 
   if ("|bmp|jpg|jpeg|png|gif|".indexOf(`|${ext}|`) >= 0) {
-    return file_image(path);
+    return file_image(path, url);
   }
 }
 
 // 文件展示 |html|php|css|go|java|js|json|txt|sh|md|
-function file_code(path) {
+function file_code(path, url) {
   var type = {
     "html": "html",
     "php": "php",
@@ -225,7 +227,7 @@ function file_code(path) {
 </div>
 <div class="mdui-textfield">
 	<label class="mdui-textfield-label">Download Link</label>
-	<input class="mdui-textfield-input" type="text" value="${href}"/>
+	<input class="mdui-textfield-input" type="text" value="${url}"/>
 </div>
 <a href="${href}" class="mdui-fab mdui-fab-fixed mdui-ripple mdui-color-theme-accent"><i class="mdui-icon material-icons">file_download</i></a>
 
@@ -256,19 +258,14 @@ function file_code(path) {
 }
 
 // 文件展示 视频 |mp4|webm|avi|
-function file_video(path) {
-  var url = window.location.origin + path;
-  var playBtn = `<a class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" href="potplayer://${url}"><i class="mdui-icon material-icons">&#xe038;</i>Play in PotPlayer</a>`;
-  if (/(iPhone|iPad|iPod|iOS|Android)/i.test(navigator.userAgent)) { //移动端
-    playBtn = `	<a class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" href="intent:${url}#Intent;package=com.mxtech.videoplayer.ad;S.title=${path};end"><i class="mdui-icon material-icons">&#xe039;</i>Play in MXPlayer</a>`;
-  }
-  var content = `
+function file_video(path, url) {
+  let content = `
 <div class="mdui-container-fluid">
 	<br>
 	<video class="mdui-video-fluid mdui-center" preload controls>
 	  <source src="${url}" type="video/mp4">
 	</video>
-	<br>${playBtn}
+	<br>
 	<!-- 固定标签 -->
 	<div class="mdui-textfield">
 	  <label class="mdui-textfield-label">Download Link</label>
@@ -285,9 +282,8 @@ function file_video(path) {
 }
 
 // 文件展示 音频 |mp3|m4a|wav|ogg|
-function file_audio(path) {
-  var url = window.location.origin + path;
-  var content = `
+function file_audio(path, url) {
+  let content = `
 <div class="mdui-container-fluid">
 	<br>
 	<audio class="mdui-center" preload controls>
@@ -309,11 +305,9 @@ function file_audio(path) {
   $('#content').html(content);
 }
 
-
 // 图片展示
-function file_image(path) {
-  var url = window.location.origin + path;
-  var content = `
+function file_image(path, url) {
+  let content = `
 <div class="mdui-container-fluid">
 	<br>
 	<img class="mdui-img-fluid" src="${url}"/>
