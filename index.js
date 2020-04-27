@@ -1,14 +1,12 @@
-// https://github.com/donwa/goindex/blob/master/使用及免责协议.md
-
 var authConfig = {
     "siteName": "GoIndex", // 网站名称
-    "root_pass": "index",  // 根目录密码，优先于.password
+    "root_pass": "",  // 根目录密码，优先于.password
     "version" : "1.0.6", // 程序版本
     "theme" : "material", // material  classic 
-    "client_id": "202264815644.apps.googleusercontent.com",
-    "client_secret": "X4Z3ca8xfWDb1Voo-F9a7ZxJ",
+    "client_id": "",
+    "client_secret": "",
     "refresh_token": "", // 授权 token
-    "root": "root" // 根目录ID
+    "root": "" // 根目录ID
 };
 
 var gd;
@@ -20,7 +18,8 @@ var html = `
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no"/>
   <title>${authConfig.siteName}</title>
-  <script src="//cdn.jsdelivr.net/combine/gh/jquery/jquery@3.2/dist/jquery.min.js,gh/donwa/goindex@${authConfig.version}/themes/${authConfig.theme}/app.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/jquery/jquery@3.2.1/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/BirkhoffLee/goindex/themes/material/app.js"></script>
 </head>
 <body>
 </body>
@@ -149,15 +148,11 @@ class googleDrive {
       let url = 'https://www.googleapis.com/drive/v3/files';
       let params = {'includeItemsFromAllDrives':true,'supportsAllDrives':true};
       params.q = `'${parent}' in parents and name = '${name}' andtrashed = false`;
-      params.fields = "files(id, name, mimeType, size ,createdTime, modifiedTime, iconLink, thumbnailLink, shortcutDetails)";
+      params.fields = "files(id, name, mimeType, size ,createdTime, modifiedTime, iconLink, thumbnailLink)";
       url += '?'+this.enQuery(params);
       let requestOption = await this.requestOption();
       let response = await fetch(url, requestOption);
       let obj = await response.json();
-      if (obj.files && obj.files[0] && obj.files[0].mimeType == 'application/vnd.google-apps.shortcut'){
-        obj.files[0].id = obj.files[0].shortcutDetails.targetId;
-        obj.files[0].mimeType = obj.files[0].shortcutDetails.targetMimeType;
-      }
       console.log(obj);
       return obj.files[0];
     }
@@ -213,7 +208,7 @@ class googleDrive {
       let params = {'includeItemsFromAllDrives':true,'supportsAllDrives':true};
       params.q = `'${parent}' in parents and trashed = false AND name !='.password'`;
       params.orderBy= 'folder,name,modifiedTime desc';
-      params.fields = "nextPageToken, files(id, name, mimeType, size , modifiedTime, shortcutDetails)";
+      params.fields = "nextPageToken, files(id, name, mimeType, size , modifiedTime)";
       params.pageSize = 1000;
 
       do {
@@ -225,12 +220,6 @@ class googleDrive {
         let requestOption = await this.requestOption();
         let response = await fetch(url, requestOption);
         obj = await response.json();
-        obj.files.forEach(file => {
-          if (file && file.mimeType == 'application/vnd.google-apps.shortcut') {
-            file.id = file.shortcutDetails.targetId;
-            file.mimeType = file.shortcutDetails.targetMimeType;
-          }
-        });
         files.push(...obj.files);
         pageToken = obj.nextPageToken;
       } while (pageToken);
@@ -264,7 +253,7 @@ class googleDrive {
     async _findDirId(parent, name){
       name = decodeURIComponent(name).replace(/\'/g, "\\'");
       
-      console.log("_findDirId",parent,name);
+    //   console.log("_findDirId",parent,name);
 
       if(parent==undefined){
         return null;
@@ -272,8 +261,8 @@ class googleDrive {
 
       let url = 'https://www.googleapis.com/drive/v3/files';
       let params = {'includeItemsFromAllDrives':true,'supportsAllDrives':true};
-      params.q = `'${parent}' in parents and (mimeType = 'application/vnd.google-apps.folder' or mimeType = 'application/vnd.google-apps.shortcut') and name = '${name}'  and trashed = false`;
-      params.fields = "nextPageToken, files(id, name, mimeType, shortcutDetails)";
+      params.q = `'${parent}' in parents and mimeType = 'application/vnd.google-apps.folder' and name = '${name}'  and trashed = false`;
+      params.fields = "nextPageToken, files(id, name, mimeType)";
       url += '?'+this.enQuery(params);
       let requestOption = await this.requestOption();
       let response = await fetch(url, requestOption);
@@ -281,18 +270,13 @@ class googleDrive {
       if(obj.files[0] == undefined){
         return null;
       }
-      if (obj.files[0].mimeType == 'application/vnd.google-apps.shortcut' && obj.files[0].shortcutDetails.targetMimeType == 'application/vnd.google-apps.folder') {
-        obj.files[0].id = obj.files[0].shortcutDetails.targetId;
-      } else if (obj.files[0].mimeType == 'application/vnd.google-apps.shortcut' && obj.files[0].shortcutDetails.targetMimeType != 'application/vnd.google-apps.folder'){
-        return null;
-      }
       return obj.files[0].id;
     }
 
     async accessToken(){
-      console.log("accessToken");
       if(this.authConfig.expires == undefined  ||this.authConfig.expires< Date.now()){
         const obj = await this.fetchAccessToken();
+
         if(obj.access_token != undefined){
           this.authConfig.accessToken = obj.access_token;
           this.authConfig.expires = Date.now()+3500*1000;
