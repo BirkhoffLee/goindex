@@ -205,7 +205,7 @@ function get_file(path, file, callback) {
 function file(path) {
   let name = path.split('/').pop();
   let ext = name.split('.').pop().toLowerCase().replace(`?a=view`, "");
-  let url = windows.locaion.origin + path.split('/').map(encodeUrl).join('/')
+  let url = window.locaion.origin + path.split('/').map(encodeUrl).join('/')
 
   if ("|html|php|css|go|java|js|json|txt|sh|md|".indexOf(`|${ext}|`) >= 0) {
     return file_code(path, url);
